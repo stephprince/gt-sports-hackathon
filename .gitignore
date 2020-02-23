@@ -1,2 +1,3 @@
 *.mp4
 *.weights
+.ipynb_checkpoints/*
