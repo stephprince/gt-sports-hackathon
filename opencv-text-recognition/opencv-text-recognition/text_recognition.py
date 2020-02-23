@@ -70,17 +70,17 @@ def decode_predictions(scores, geometry):
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", type=str,
-	help="path to input image")
+				help="path to input image")
 ap.add_argument("-east", "--east", type=str,
-	help="path to input EAST text detector")
+				help="path to input EAST text detector")
 ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
-	help="minimum probability required to inspect a region")
+				help="minimum probability required to inspect a region")
 ap.add_argument("-w", "--width", type=int, default=320,
-	help="nearest multiple of 32 for resized width")
+				help="nearest multiple of 32 for resized width")
 ap.add_argument("-e", "--height", type=int, default=320,
-	help="nearest multiple of 32 for resized height")
+				help="nearest multiple of 32 for resized height")
 ap.add_argument("-p", "--padding", type=float, default=0.0,
-	help="amount of padding to add to each border of ROI")
+				help="amount of padding to add to each border of ROI")
 args = vars(ap.parse_args())
 
 # load the input image and grab the image dimensions
@@ -127,8 +127,7 @@ net = cv2.dnn.readNet(args["east"])
 
 # construct a blob from the image and then perform a forward pass of
 # the model to obtain the two output layer sets
-blob = cv2.dnn.blobFromImage(image, 1.0, (W, H),
-	(123.68, 116.78, 103.94), swapRB=True, crop=False)
+blob = cv2.dnn.blobFromImage(image, 1.0, (W, H), (123.68, 116.78, 103.94), swapRB=True, crop=False)
 net.setInput(blob)
 (scores, geometry) = net.forward(layerNames)
 
@@ -171,7 +170,7 @@ for (startX, startY, endX, endY) in boxes:
 	# treating the ROI as a single line of text
 	config = ("-l eng --oem 1 --psm 1")
 	text = pytesseract.image_to_string(roi, config=config)
-
+	#data = pytesseract.image_to_data(roi, config=config)
 	# add the bounding box coordinates and OCR'd text to the list
 	# of results
 	results.append(((startX, startY, endX, endY), text))
@@ -181,21 +180,75 @@ results = sorted(results, key=lambda r:r[0][1])
 print(results)
 # loop over the results
 for ((startX, startY, endX, endY), text) in results:
-#	# display the text OCR'd by Tesseract
-#	print("OCR TEXT")
-#	print("========")
+	# display the text OCR'd by Tesseract
+	print("OCR TEXT")
+	print("========")
 	print("{}\n".format(text))
-        
-#	# strip out non-ASCII text so we can draw the text on the image
-#	# using OpenCV, then draw the text and a bounding box surrounding
-#	# the text region of the input image
-#	text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
-#	output = orig.copy()
-#	cv2.rectangle(output, (startX, startY), (endX, endY),
-#		(0, 0, 255), 2)
-#	cv2.putText(output, text, (startX, startY - 20),
-#		cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+	# strip out non-ASCII text so we can draw the text on the image
+	# using OpenCV, then draw the text and a bounding box surrounding
+	# the text region of the input image
+	text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+	output = orig.copy()
+	cv2.rectangle(output, (startX, startY), (endX, endY),
+				  (0, 0, 255), 2)
+	print("AND" in text)
+	if "AND" in text:
+		x = startX-50
+		y = startY
+		x2 = endX + 50
+		y2 = endY
+		roi = orig[y:y2, x:x2]
+		text = pytesseract.image_to_string(roi, config=config)
+		startIdx = text.find("AND")
+		togoString = text[startIdx + 3:startIdx+6]
+		print(togoString)
+
+		#print(text)
+		cv2.rectangle(output, (x, y), (x2, y2),(0, 255, 0), 2)
+		cv2.putText(output, text, (startX, startY - 20),
+		cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+		cv2.imshow("Text Detection", output)
+		cv2.waitKey(0)
+		try:
+			togo = int(togoString)
+		except:
+			if "S" in togoString :
+				togo = 5
+			else:
+				togo = int(togoString[0])
+	elif ":" in text:
+		x = startX - 50
+		y = startY
+		x2 = endX + 50
+		y2 = endY
+		roi = orig[y:y2, x:x2]
+		#text = pytesseract.image_to_string(roi, config=config)
+		startIdx = text.find(":")
+		time = text[startIdx-2:startIdx+3]
+		#print(text)
+		#cv2.rectangle(output, (x, y), (x2, y2), (0, 255, 0), 2)
+		#cv2.putText(output, text, (startX, startY - 20),
+		#			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+		#cv2.imshow("Text Detection", output)
+		#cv2.waitKey(0)
+	elif "BALL" in text:
+		x = startX - 50
+		y = startY
+		x2 = endX + 50
+		y2 = endY
+		roi = orig[y:y2, x:x2]
+		text = pytesseract.image_to_string(roi, config=config)
+		startIdx = text.find("ON");
+		yardString = text[startIdx+2:startIdx+5];
+		yardline = int(yardString);
+		#print(text)
+		#cv2.rectangle(output, (x, y), (x2, y2), (0, 255, 0), 2)
+		#cv2.putText(output, text, (startX, startY - 20),
+		#			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+		#cv2.imshow("Text Detection", output)
+		#cv2.waitKey(0)
 
 #	# show the output image
-#	cv2.imshow("Text Detection", output)
-#	cv2.waitKey(0)
+print(togo)
+print(time)
+print(yardline)

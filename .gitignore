@@ -1,2 +1,8 @@
+<<<<<<< HEAD
 *.mp4 
 yolo-object-detection/* 
+=======
+*.mp4
+*.weights
+.ipynb_checkpoints/*
+>>>>>>> 2a08e3f26c5f646d24eaf817f34dc48d68dfcebb
